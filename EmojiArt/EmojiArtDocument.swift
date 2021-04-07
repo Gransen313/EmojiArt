@@ -11,7 +11,22 @@ class EmojiArtDocument: ObservableObject {
     
     static let pallet: String = "👀🧞‍♂️🪡🦀🎂"
     
-    @Published private var emojiArt: EmojiArt = EmojiArt()
+    //@Published// workaround for property observer problem with property wrapper
+    private var emojiArt: EmojiArt = EmojiArt() {
+        willSet {
+            objectWillChange.send()
+        }
+        didSet {
+            UserDefaults.standard.set(emojiArt.json, forKey: EmojiArtDocument.untitled)
+        }
+    }
+    
+    private static let untitled = "EmojiArtDocument.Untitled"
+    
+    init() {
+        emojiArt = EmojiArt.init(json: UserDefaults.standard.data(forKey: EmojiArtDocument.untitled)) ?? EmojiArt()
+        fetchBackgroundImageData()
+    }
     
     @Published private(set) var backgroundImage: UIImage?
     

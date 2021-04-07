@@ -1,8 +1,8 @@
 //
 //  EmojiArtExtensions.swift
-//  EmojiArtExtensions
+//  EmojiArt
 //
-//  Created by Sergey Borisov on 05.04.2021.
+//  Created by Sergey Borisov on 06.04.2021.
 //
 
 import SwiftUI
@@ -208,3 +208,4 @@ extension UIImage {
         return url
     }
 }
+
