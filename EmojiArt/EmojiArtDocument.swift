@@ -12,7 +12,7 @@ class EmojiArtDocument: ObservableObject {
     static let pallet: String = "👀🧞‍♂️🪡🦀🎂"
     
     //@Published// workaround for property observer problem with property wrapper
-    private var emojiArt: EmojiArt = EmojiArt() {
+    private var emojiArt: EmojiArt {
         willSet {
             objectWillChange.send()
         }
@@ -24,7 +24,7 @@ class EmojiArtDocument: ObservableObject {
     private static let untitled = "EmojiArtDocument.Untitled"
     
     init() {
-        emojiArt = EmojiArt.init(json: UserDefaults.standard.data(forKey: EmojiArtDocument.untitled)) ?? EmojiArt()
+        emojiArt = EmojiArt(json: UserDefaults.standard.data(forKey: EmojiArtDocument.untitled)) ?? EmojiArt()
         fetchBackgroundImageData()
     }
     
@@ -34,7 +34,7 @@ class EmojiArtDocument: ObservableObject {
     
     //MARK: - Intent(s)
     func addEmoji(_ emogi: String, at location: CGPoint, size: CGFloat) {
-        emojiArt.addEmoji(text: emogi, x: Int(location.x), y: Int(location.y), size: Int(size))
+        emojiArt.addEmoji(emogi, x: Int(location.x), y: Int(location.y), size: Int(size))
     }
     func moveEmoji(_ emogi: EmojiArt.Emoji, by offset: CGSize) {
         if let index = emojiArt.emojies.firstIndex(matching: emogi) {

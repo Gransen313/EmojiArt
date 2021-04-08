@@ -11,11 +11,22 @@ extension Collection where Element: Identifiable {
     func firstIndex(matching element: Element) -> Self.Index? {
         firstIndex(where: { $0.id == element.id })
     }
-    // note that contains(matching:) is different than contains()
-    // this version uses the Identifiable-ness of its elements
-    // to see whether a member of the Collection has the same identity
+    
+    // Use the Identifiable-ness of elements
     func contains(matching element: Element) -> Bool {
         self.contains(where: { $0.id == element.id })
+    }
+}
+
+extension Set where Element: Identifiable {
+    mutating func toggleMatching(_ element: Element) {
+        if contains(matching: element) {
+            if let index = firstIndex(matching: element) {
+                remove(at: index)
+            }
+        } else {
+            insert(element)
+        }
     }
 }
 
@@ -52,7 +63,7 @@ extension GeometryProxy {
     // converts from some other coordinate space to the proxy's own
     func convert(_ point: CGPoint, from coordinateSpace: CoordinateSpace) -> CGPoint {
         let frame = self.frame(in: coordinateSpace)
-        return CGPoint(x: point.x-frame.origin.x, y: point.y-frame.origin.y)
+        return CGPoint(x: point.x - frame.origin.x, y: point.y - frame.origin.y)
     }
 }
 

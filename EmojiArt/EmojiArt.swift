@@ -43,7 +43,7 @@ struct EmojiArt: Codable {
     
     private var uniqueEmojiID = 0
     
-    mutating func addEmoji(text: String, x: Int, y: Int, size: Int) {
+    mutating func addEmoji(_ text: String, x: Int, y: Int, size: Int) {
         uniqueEmojiID += 1
         emojies.append(Emoji(text: text, x: x, y: y, size: size, id: uniqueEmojiID))
     }
