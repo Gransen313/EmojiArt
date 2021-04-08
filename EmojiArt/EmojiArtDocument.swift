@@ -47,6 +47,11 @@ class EmojiArtDocument: ObservableObject {
             emojiArt.emojies[index].size = Int((CGFloat(emojiArt.emojies[index].size) * scale).rounded(.toNearestOrEven))
         }
     }
+    func removeEmoji(_ emoji: EmojiArt.Emoji) {
+        if let index = emojiArt.emojies.firstIndex(matching: emoji) {
+            emojiArt.emojies.remove(at: index)
+        }
+    }
     func setBackgroundURL(_ url: URL?) {
         emojiArt.backgroundURL = url?.imageURL
         fetchBackgroundImageData()
