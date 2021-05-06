@@ -13,13 +13,16 @@ struct EmojiArtDocumentView: View {
     
     @State private var selectedEmogies = Set<EmojiArt.Emoji>()
     @State private var dragingNowEmoji: EmojiArt.Emoji?
+    @State private var choosenPalette: String = ""
     
     var body: some View {
         VStack {
             HStack {
+                PaletteChooser(document: document, choosenPalette: $choosenPalette)
+                
                 ScrollView(.horizontal) {
                     HStack {
-                        ForEach(EmojiArtDocument.pallet.map { String($0) }, id: \.self) { emoji in
+                        ForEach(choosenPalette.map { String($0) }, id: \.self) { emoji in
                             Text(emoji)
                                 .font(.system(size: defaultEmojiSize))
                                 .onDrag { NSItemProvider(object: emoji as NSString) }
@@ -27,6 +30,7 @@ struct EmojiArtDocumentView: View {
                     }
                 }
                 .padding(.horizontal)
+                .onAppear { choosenPalette = document.defaultPalette }
                 
                 Button(action: {
                     selectedEmogies.forEach { emoji in
@@ -49,28 +53,31 @@ struct EmojiArtDocumentView: View {
                             .offset(panOffset)
                     )
                     .gesture(doubleTapToZoom(in: geometry.size))
-                    ForEach(document.emojies) { emoji in
-                        Text(emoji.text)
-                            .font(animatableWithSize: emoji.fontSize * zoomScale(for: emoji))
-                            .position(self.position(for: emoji, in: geometry.size))
-                            .opacity(isSelected(emoji) ? 0.7 : 1.0)
-                            .onTapGesture {
-                                selectedEmogies.toggleMatching(emoji)
-                            }
-                            .gesture(emogiesDragGesture(emoji))
+                    if isLoading {
+                        Image(systemName: "timer").imageScale(.large).spinning()
+                    } else {
+                        ForEach(document.emojies) { emoji in
+                            Text(emoji.text)
+                                .font(animatableWithSize: emoji.fontSize * zoomScale(for: emoji))
+                                .position(self.position(for: emoji, in: geometry.size))
+                                .opacity(isSelected(emoji) ? 0.7 : 1.0)
+                                .onTapGesture {
+                                    selectedEmogies.toggleMatching(emoji)
+                                }
+                                .gesture(emogiesDragGesture(emoji))
+                        }
                     }
                 }
                 .clipped()
                 .gesture(panGesture())
                 .gesture(zoomGesture())
                 .edgesIgnoringSafeArea([.horizontal, .bottom])
+                .onReceive(self.document.$backgroundImage) { image in
+                    self.zoomToFit(image, in: geometry.size)
+                }
                 .onDrop(of: ["public.image", "public.text"], isTargeted: nil) { providers, location in
-                    var location = geometry.convert(location, from: .global)
-                    
-                    // SwiftUI bug (as of 13.4)? the location is supposed to be in our coordinate system
-                    // however, the y coordinate appears to be in the global coordinate system
-//                    var location = CGPoint(x: location.x, y: geometry.convert(location, from: .global).y)
-                    
+//                    var location = geometry.convert(location, from: .global)
+                    var location = CGPoint(x: location.x, y: location.y)
                     location = CGPoint(x: location.x - geometry.size.width / 2, y: location.y - geometry.size.height / 2)
                     location = CGPoint(x: location.x - panOffset.width, y: location.y - panOffset.height)
                     location = CGPoint(x: location.x / zoomScale, y: location.y / zoomScale)
@@ -79,6 +86,10 @@ struct EmojiArtDocumentView: View {
                 .gesture(deselectAllEmogies(in: geometry.size))
             }
         }
+    }
+    
+    var isLoading: Bool {
+        document.backgroundURL != nil && document.backgroundImage == nil
     }
     
     @GestureState private var gestureSelectedEmogiesOffset: CGSize = .zero
@@ -198,7 +209,7 @@ struct EmojiArtDocumentView: View {
     
     private func drop(providers: [NSItemProvider], at location: CGPoint) -> Bool {
         var found = providers.loadFirstObject(ofType: URL.self) { url in
-            self.document.setBackgroundURL(url)
+            self.document.backgroundURL = url
         }
         if !found {
             found = providers.loadObjects(ofType: String.self) { string in
