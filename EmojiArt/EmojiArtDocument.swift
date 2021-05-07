@@ -8,25 +8,37 @@
 import SwiftUI
 import Combine
 
-class EmojiArtDocument: ObservableObject {
+class EmojiArtDocument: ObservableObject, Hashable, Identifiable {
+    
+    static func == (lhs: EmojiArtDocument, rhs: EmojiArtDocument) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    let id: UUID
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
     
     static let pallet: String = "👀🧞‍♂️🪡🦀🎂"
     
     @Published private var emojiArt: EmojiArt
     
-    private static let untitled = "EmojiArtDocument.Untitled"
-    
     private var autosaveCancelable: AnyCancellable?
     
-    init() {
-        emojiArt = EmojiArt(json: UserDefaults.standard.data(forKey: EmojiArtDocument.untitled)) ?? EmojiArt()
+    init(id: UUID? = nil) {
+        self.id = id ?? UUID()
+        let defaultsKey = "EmojiArtDocument.\(self.id.uuidString)"
+        emojiArt = EmojiArt(json: UserDefaults.standard.data(forKey: defaultsKey)) ?? EmojiArt()
         autosaveCancelable = $emojiArt.sink { emojiArt in
-            UserDefaults.standard.set(emojiArt.json, forKey: EmojiArtDocument.untitled)
+            UserDefaults.standard.set(emojiArt.json, forKey: defaultsKey)
         }
         fetchBackgroundImageData()
     }
     
     @Published private(set) var backgroundImage: UIImage?
+    
+    @Published var steadyStateZoomScale: CGFloat = 1.0
+    @Published var steadyStatePanOffset: CGSize = .zero
     
     var emojies: [EmojiArt.Emoji] { emojiArt.emojies }
     
